@@ -1,0 +1,12 @@
+<?xml version="1.0" encoding="utf-8"?>
+<menu xmlns:android="http://schemas.android.com/apk/res/android">
+<item android:title="Device Photo"
+    android:id="@+id/nav_device_photo"
+    />
+    <item android:title="Photobucket  Cloud"
+        android:id="@+id/nav_cloud"/>
+    <item android:title="Vault"
+        android:id="@+id/nav_vault"/>
+    <item android:title="Recycle Bin"
+        android:id="@+id/nav_recycler_bin"/>
+</menu>
