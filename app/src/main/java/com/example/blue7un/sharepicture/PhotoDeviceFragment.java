@@ -1,5 +1,6 @@
 package com.example.blue7un.sharepicture;
 
+import android.app.Activity;
 import android.content.Context;
 import android.content.Intent;
 import android.database.Cursor;
@@ -8,6 +9,9 @@ import android.net.Uri;
 import android.os.Bundle;
 import android.provider.MediaStore;
 import android.support.v4.app.Fragment;
+import android.support.v7.widget.LinearLayoutManager;
+import android.support.v7.widget.RecyclerView;
+import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -16,101 +20,137 @@ import android.widget.CheckBox;
 import android.widget.GridView;
 import android.widget.ImageView;
 
+import com.example.blue7un.sharepicture.adapters.RecyclerViewDataAdapter;
+import com.example.blue7un.sharepicture.models.SectionDataModel;
+import com.example.blue7un.sharepicture.models.SingleItemModel;
+
+import java.io.File;
+import java.text.ParseException;
+import java.text.SimpleDateFormat;
+import java.util.ArrayList;
+import java.util.Collection;
+import java.util.Collections;
+import java.util.Comparator;
+import java.util.Date;
+
 /**
  * Created by blue7un on 8/28/17.
  */
 
 public class PhotoDeviceFragment extends Fragment {
-    private int count;
-    private Bitmap[] thumbnails;
-    private boolean[] thumbnailsselection;
-    private String[] arrPath;
-    private ImageAdapter imageAdapter;
+
+    ArrayList<SectionDataModel> allSampleData;
+    RecyclerView my_recycler_view;
+    public static final String TAG = "AAA";
+    ArrayList<SingleItemModel> list = new ArrayList<>();
     @Override
     public View onCreateView(LayoutInflater inflater, ViewGroup container,
                              Bundle savedInstanceState) {
         View rootView = inflater.inflate(R.layout.galery, container, false);
+        allSampleData = new ArrayList<SectionDataModel>();
+        createDummyData2();
 
-//        final String[] columns = { MediaStore.Images.Media.DATA, MediaStore.Images.Media._ID };
-//        final String orderBy = MediaStore.Images.Media._ID;
-//        Cursor imagecursor = managedQuery(
-//                MediaStore.Images.Media.EXTERNAL_CONTENT_URI, columns, null,
-//                null, orderBy);
-//        int image_column_index = imagecursor.getColumnIndex(MediaStore.Images.Media._ID);
-//        this.count = imagecursor.getCount();
-//        this.thumbnails = new Bitmap[this.count];
-//        this.arrPath = new String[this.count];
-//        this.thumbnailsselection = new boolean[this.count];
-//        for (int i = 0; i < this.count; i++) {
-//            imagecursor.moveToPosition(i);
-//            int id = imagecursor.getInt(image_column_index);
-//            int dataColumnIndex = imagecursor.getColumnIndex(MediaStore.Images.Media.DATA);
-//            thumbnails[i] = MediaStore.Images.Thumbnails.getThumbnail(
-//                    getContext().getContentResolver(), id,
-//                    MediaStore.Images.Thumbnails.MICRO_KIND, null);
-//            arrPath[i]= imagecursor.getString(dataColumnIndex);
-//        }
-//        GridView imagegrid = (GridView) rootView.findViewById(R.id.PhoneImageGrid);
-//        imageAdapter = new ImageAdapter();
-//        imagegrid.setAdapter(imageAdapter);
-//        imagecursor.close();
 
+        my_recycler_view = (RecyclerView) rootView.findViewById(R.id.recyclerView);
+
+        my_recycler_view.setHasFixedSize(true);
+
+        RecyclerViewDataAdapter adapter = new RecyclerViewDataAdapter(getContext(), allSampleData);
+
+        my_recycler_view.setLayoutManager(new LinearLayoutManager(getContext(), LinearLayoutManager.VERTICAL, false));
+
+        my_recycler_view.setAdapter(adapter);
         return rootView;
     }
-    public class ImageAdapter extends BaseAdapter {
-        private LayoutInflater mInflater;
+    public void createDummyData() {
+        list = getAllShownImagesPath(getActivity());
+        for (int i = 1; i <= 5; i++) {
 
-        public ImageAdapter() {
-            mInflater = (LayoutInflater) getContext().getSystemService(Context.LAYOUT_INFLATER_SERVICE);
-        }
+            SectionDataModel dm = new SectionDataModel();
 
-        public int getCount() {
-            return count;
-        }
+            dm.setHeaderTitle("Section " + i);
 
-        public Object getItem(int position) {
-            return position;
-        }
-
-        public long getItemId(int position) {
-            return position;
-        }
-
-        public View getView(int position, View convertView, ViewGroup parent) {
-            ViewHolder holder;
-            if (convertView == null) {
-                holder = new ViewHolder();
-                convertView = mInflater.inflate(
-                        R.layout.galery_item, null);
-                holder.imageview = (ImageView) convertView.findViewById(R.id.thumbImage);
-
-                convertView.setTag(holder);
+            ArrayList<SingleItemModel> singleItem = new ArrayList<SingleItemModel>();
+            for (int j = 0; j <= 5; j++) {
+                singleItem.add(new SingleItemModel("Item " + j, "URL " + j));
             }
-            else {
-                holder = (ViewHolder) convertView.getTag();
-            }
-            holder.checkbox.setId(position);
-            holder.imageview.setId(position);
-            holder.imageview.setOnClickListener(new View.OnClickListener() {
 
-                public void onClick(View v) {
-                    // TODO Auto-generated method stub
-                    int id = v.getId();
-                    Intent intent = new Intent();
-                    intent.setAction(Intent.ACTION_VIEW);
-                    intent.setDataAndType(Uri.parse("file://" + arrPath[id]), "image/*");
-                    startActivity(intent);
-                }
-            });
-            holder.imageview.setImageBitmap(thumbnails[position]);
-            holder.checkbox.setChecked(thumbnailsselection[position]);
-            holder.id = position;
-            return convertView;
+            dm.setAllItemsInSection(singleItem);
+
+            allSampleData.add(dm);
+
         }
     }
-    class ViewHolder {
-        ImageView imageview;
-        CheckBox checkbox;
-        int id;
+    public void createDummyData2() {
+        list = getAllShownImagesPath(getActivity());
+//        Collections.sort(list, new Comparator<SingleItemModel>() {
+//            @Override
+//            public int compare(SingleItemModel o1, SingleItemModel o2) {
+//                if (o1.getDate() == null || o2.getDate() == null)
+//                    return 0;
+//                return o1.getDate().compareTo(o2.getDate());
+//            }
+//        });
+        int k=0;
+        SectionDataModel dm = new SectionDataModel();
+        ArrayList<SingleItemModel> singleItem = new ArrayList<SingleItemModel>();
+        while(k!=(list.size()-1)) {
+
+             if(k==0){
+
+                 dm.setHeaderTitle(""+list.get(0).getDate());
+                 singleItem.add(new SingleItemModel(list.get(0).getDate(),list.get(0).getImagePath()));
+             }
+             if(list.get(k).getDate().equals(list.get(k+1).getDate())){
+
+                 singleItem.add(new SingleItemModel(list.get(k+1).getDate(),list.get(k+1).getImagePath()));
+
+             }else{
+
+                 dm.setAllItemsInSection(singleItem);
+
+                 allSampleData.add(dm);
+                 dm= new SectionDataModel();
+                 singleItem = new ArrayList<SingleItemModel>();
+                 dm.setHeaderTitle(""+list.get(k+1).getDate());
+                 singleItem.add(new SingleItemModel(list.get(k+1).getDate(),list.get(k+1).getImagePath()));
+                 if(k==(list.size()-2)){
+                     dm.setAllItemsInSection(singleItem);allSampleData.add(dm);
+                 }
+             }
+            k++;
+
+        }
+        Log.d(TAG, "createDummyData2: "+allSampleData.size());
+    }
+    private ArrayList<SingleItemModel> getAllShownImagesPath(Activity activity) {
+        Uri uri;
+        Cursor cursor;
+        int column_index_data, column_index_folder_name;
+        ArrayList<SingleItemModel> listOfAllImages = new ArrayList<>();
+        String absolutePathOfImage = null;
+        uri = android.provider.MediaStore.Images.Media.EXTERNAL_CONTENT_URI;
+
+        String[] projection = { MediaStore.MediaColumns.DATA,
+                MediaStore.Images.Media.BUCKET_DISPLAY_NAME };
+
+        cursor = activity.getContentResolver().query(uri, projection, null,
+                null, null);
+
+        column_index_data = cursor.getColumnIndexOrThrow(MediaStore.MediaColumns.DATA);
+        column_index_folder_name = cursor
+                .getColumnIndexOrThrow(MediaStore.Images.Media.BUCKET_DISPLAY_NAME);
+        while (cursor.moveToNext()) {
+            absolutePathOfImage = cursor.getString(column_index_data);
+//                listOfAllImages.add(absolutePathOfImage);
+            File file = new File(absolutePathOfImage);
+            Date lastModeDate = new Date(file.lastModified());
+            SimpleDateFormat sdf = new SimpleDateFormat("dd/MM/yyyy");
+            String date = sdf.format(lastModeDate);
+            SingleItemModel photo = new SingleItemModel(date,absolutePathOfImage);
+            listOfAllImages.add(photo);
+            Log.d(TAG, "getAllShownImagesPath: "+date);
+        }
+        return listOfAllImages;
     }
 }
